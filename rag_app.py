@@ -40,14 +40,19 @@ def main():
     # ==============================
     print("--- Configuration & Setup ---")
     
-    # Configure the LLM. Point this to your Mac's IP address.
-    # This is the "Client-Server" connection. Your app is the client, the Mac is the server.
-    Settings.llm = Ollama(model="llama3", base_url="http://192.168.1.235:11434")
-    
+    # Configure the LLM. Using localhost for better reliability.
+# Configure the LLM with a longer timeout (default is 30 seconds)
+    Settings.llm = Ollama(
+    model="llama3.2",
+    base_url="http://localhost:11434",
+    request_timeout=300.0  # 5 minutes
+    )    
     # Configure the embedding model. This runs locally on your Windows PC.
     # "BAAI/bge-small-en-v1.5" is a great, lightweight default.
     Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5")
-    
+    # Optimize chunk size
+    Settings.chunk_size = 512
+    Settings.chunk_overlap = 50
     print("--- Configuration complete ---")
     
     # Block 2: The Indexing Phase (Loading knowledge into the "library")
@@ -77,8 +82,8 @@ def main():
     # ===================================================
     print("\n--- Querying Phase ---")
     
-    # Create a query engine from the index
-    query_engine = index.as_query_engine()
+    # Create a query engine from the index with explicit Ollama LLM
+    query_engine = index.as_query_engine(llm=Settings.llm)
     
     # Ask a question!
     # The query will be embedded, used to find relevant chunks,
